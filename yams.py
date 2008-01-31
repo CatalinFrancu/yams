@@ -1,6 +1,23 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+# Copyright 2008 Catalin Francu <cata@francu.com>
+#
+# This file is part of Yams.
+#
+# Yams is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# Yams is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with Yams.  If not, see <http://www.gnu.org/licenses/>.
+
 import gnome
 import gtk
 import operator
@@ -13,6 +30,7 @@ import time
 
 import yamsData
 
+VERSION = '1.0'
 CONFIG_FILE = '~/.yams.conf'
 
 MENU = '''<ui>
@@ -26,6 +44,7 @@ MENU = '''<ui>
     </menu>
     <menu action="Help">
       <menuitem action="Contents"/>
+      <menuitem action="About"/>
     </menu>
   </menubar>
 </ui>'''
@@ -287,8 +306,35 @@ class MainWindow:
     #enddef
 
     def doHelpContents(self, action):
-        print "yelp!"
-        gnome.help_display('foo', None)
+        gnome.help_display('yams.xml', None)
+    #enddef
+
+    def doHelpAbout(self, action):
+        ad = gtk.AboutDialog()
+
+        ad.set_name('Yams')
+        ad.set_version(VERSION)
+        ad.set_copyright('Copyright 2008 Cătălin Frâncu')
+        ad.set_comments('This game is dedicated to my father, '
+                        'who taught me the game.')
+        ad.set_license(
+            'Yams is free software: you can redistribute it and/or modify '
+            'it under the terms of the GNU General Public License as '
+            'published by the Free Software Foundation, either version 3 of '
+            'the License, or (at your option) any later version.\n\n'
+
+            'Yams is distributed in the hope that it will be useful, '
+            'but WITHOUT ANY WARRANTY; without even the implied warranty of '
+            'MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the '
+            'GNU General Public License for more details.\n\n'
+
+            'You should have received a copy of the GNU General Public '
+            'License along with Yams.  If not, see '
+            '<http://www.gnu.org/licenses/>.')
+        ad.set_wrap_license(True)
+        ad.set_website('http://catalin.francu.com')
+        ad.run()
+        ad.destroy()
     #enddef
 
     def onRollButtonClick(self, button):
@@ -440,6 +486,7 @@ class MainWindow:
              ('Help', None, '_Help'),
              ('Contents', gtk.STOCK_HELP, '_Contents', 'F1', None,
               self.doHelpContents),
+             ('About', gtk.STOCK_ABOUT, '_About', None, None, self.doHelpAbout),
              ])
         uiManager.insert_action_group(actionGroup, 0)
         uiManager.add_ui_from_string(MENU)
@@ -649,6 +696,9 @@ class MainWindow:
 #endclass
 
 if __name__ == "__main__":
+    appProperties = {'app-datadir': os.getcwd()}
+    gnome.init('yams', '1.0', properties = appProperties)
+
     window = MainWindow()
     window.doGameNew(None)
     gtk.main()

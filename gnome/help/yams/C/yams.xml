@@ -1,0 +1,526 @@
+<?xml version="1.0"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.1.2//EN"
+    "http://www.oasis-open.org/docbook/xml/4.1.2/docbookx.dtd" [
+  <!ENTITY app "<application>Yams</application>">
+  <!ENTITY appname "Yams">
+  <!ENTITY appversion "1.0">
+  <!ENTITY authorname "Cătălin Frâncu">
+  <!ENTITY date "January 2008">
+  <!ENTITY email "<email>cata@francu.com</email>">
+  <!ENTITY manrevision "1.0">
+]>
+
+<article id="index" lang="en">
+
+  <!-- =============Document Header ============================= -->
+
+  <articleinfo>
+    <title>&app; Manual</title>
+
+    <abstract role="description">
+      <para>
+	Yams is a dice game. Players roll five dice up to three times
+	and try to make the best possible combinations.
+      </para>
+    </abstract>
+
+    <author role="maintainer"> 
+      <firstname>Cătălin</firstname> 
+      <surname>Frâncu</surname> 
+      <affiliation> 
+	<address>&email;</address> 
+      </affiliation> 
+    </author> 
+
+    <copyright>
+      <year>2008</year>
+      <holder>&authorname;</holder>
+    </copyright>
+
+    <legalnotice>
+      <para>
+	Permission is granted to copy, distribute and/or modify this
+	document under the terms of the GNU Free Documentation License
+	(GFDL), Version 1.2 or any later version published by the Free
+	Software Foundation; with no Invariant Sections, no Front-Cover
+	Texts, and no Back-Cover Texts.  You can find a copy of the
+	GFDL at this <ulink type="help" url="ghelp:fdl">link </ulink>
+	or online at the <ulink type="http"
+	url="http://www.gnu.org/licenses/fdl.html">GNU web page</ulink>.
+      </para>
+
+      <para>
+	This document, as well as much of the game's layout and
+	graphics, are inspired from <ulink type="help"
+	url="ghelp:gtali"><application>GNOME
+	Tali</application></ulink>, for which the author is deeply
+	grateful to Scott Heavner.
+      </para>
+    </legalnotice>
+
+    <legalnotice> 
+      <title>Feedback</title> 
+
+      <para>
+	To report a bug or make a suggestion regarding the &app;
+	application or this manual, please contact &authorname;
+	at &email;.
+      </para>
+    </legalnotice>
+
+    <revhistory>
+      <revision> 
+	<revnumber>&appname; Manual V&manrevision;</revnumber> 
+	<date>&date;</date> 
+	<revdescription> 
+	  <para role="author">
+	    &authorname; &email;
+	  </para>
+	</revdescription> 
+      </revision> 
+    </revhistory> 
+
+    <releaseinfo>
+      This manual describes version &appversion; of &appname;.
+    </releaseinfo>
+  </articleinfo>
+
+
+  <!-- ============= Document Body ============================= -->
+
+  <sect1>
+    <title>Introduction</title>
+
+    <para>
+       &app; is a dice game involving strategy and luck. You roll five
+       dice up to three times and try to create different dice combinations.
+       Your two rerolls may include any or all of your dice.
+    </para>
+
+    <para>
+      &app; can be played in single-player mode or by up to six
+      players. There is currently no support for computer opponents.
+    </para>
+  </sect1>
+
+
+  <sect1 id="playing">
+    <title>Playing &app;</title>
+    
+    <para>
+      When the game starts, click the "Roll 1/3" button to roll all
+      the dice for the first time.
+    </para>
+
+    <orderedlist>
+      <listitem>
+        <para>
+	  Click on the dice you wish to roll again.
+	</para>
+      </listitem>
+      <listitem>
+        <para>
+	  When you have selected all the dice you wish to reroll,
+          press the <guibutton>Roll 2/3!</guibutton> button.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  When you have a hand you like or after you have rolled three
+          times, click on a cell to write down the points for your
+          combination. If your dice do not actually have that
+          combination (say if you click on
+          the <emphasis>Yams</emphasis> row but you do not have a
+          yams), you will get a score of 0. This is referred to
+          as <emphasis>cutting</emphasis> a cell.
+	</para>
+      </listitem>
+    </orderedlist>
+
+    <sect2 id="keyboard">
+      <title>Keyboard shortcuts</title> 
+
+      <para>
+	You can select and roll the dice using the keyboard. The
+	number keys 1 through 5 select or deselect the corresponding
+	dice for rerolling and the R key rerolls the selected dice.
+      </para>
+    </sect2>
+  </sect1>
+
+
+  <sect1>
+    <title>Score Sheet</title>
+
+    <para>
+      A <emphasis>turn</emphasis> consists of rolling the dice until
+      you find the combination you need, up to three times. After each
+      turn, you must click on an available cell of the adjacent score
+      sheet in order to write down the points for this turn. The &app;
+      score sheet consists of six columns and twelve rows. Each column
+      can only be connected according to specific rules. The six
+      columns are:
+
+      <orderedlist>
+	<listitem>
+	  <para>
+	    <emphasis>Down:</emphasis> This column can only be filled
+	    top-down. For example, you cannot fill
+	    the <emphasis>Twos</emphasis> cell until you have filled
+	    the <emphasis>Ones</emphasis> cell.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Free Down:</emphasis> You can only fill a cell
+	    in this column if you have already filled the
+	    corresponding cell in the <emphasis>Down</emphasis> column.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Free Up:</emphasis> You can only fill a cell
+	    in this column if you have already filled the
+	    corresponding cell in the <emphasis>Up</emphasis> column.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Up:</emphasis> This column can only be filled
+	    bottom-up. For example, you cannot fill the <emphasis>Four
+	    of a Kind</emphasis> cell until you have filled
+	    the <emphasis>Yams</emphasis> cell.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Announced:</emphasis> In order to write down a
+	    score in this column, you need
+	    to <emphasis>announce</emphasis> the cell that you intend
+	    to fill by clicking on it <emphasis>after the first
+	    roll.</emphasis> For example, if your first roll is [3, 3,
+	    3, 1, 6], you might be tempted to attempt a yams on this
+	    column. Click the <emphasis>Annnounced Yams</emphasis>
+	    cell, then roll twice more in an attempt to make the
+	    yams. Regardless of whether you succeed or not, you must
+	    click the cell again at the end to write down the
+	    score. This can mean a score of 0 if you did not succeed!
+	    If you click in an <emphasis>Announced</emphasis> without
+	    having announced it first, you will receive a score of 0
+	    in that cell.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Served:</emphasis> You can only write down a
+	    score in this column <emphasis>after the first
+	    roll</emphasis>. Clicking in a <emphasis>Served</emphasis>
+	    cell after two or three rolls will get you a score of 0 in
+	    that cell.
+	  </para>
+	</listitem>
+      </orderedlist>
+    </para>
+
+    <para>
+      As an example, at the beginning of the game the only available
+      cells are the <emphasis>Down Ones</emphasis>, the <emphasis>Up
+      Yams</emphasis>, all the cells on
+      the <emphasis>Announced</emphasis> column (provided you announce
+      one after the first roll) and all the cells on
+      the <emphasis>Served</emphasis> column (provided you fill it
+      after the first roll). If on the first turn you fill
+      the <emphasis>Down Ones</emphasis>, then on the second turn
+      the <emphasis>Down Twos</emphasis> and the <emphasis>Free Down
+      Ones</emphasis> also become available.
+    </para>
+
+    <para>
+      The various combinations for the twelve rows are explained in
+      the <emphasis>Scoring</emphasis> section. Following these rows
+      are the total rows, which show your progress. <emphasis>T1,
+      T2</emphasis> and <emphasis>T3</emphasis> indicate the running
+      totals for the upper, center and lower section of each
+      column. <emphasis>Total</emphasis> indicates the running total
+      for the entire column.
+     </para>
+  </sect1>
+
+
+  <sect1 id="scoring">
+    <title>Scoring</title>
+
+    <para>
+      The first four columns score identically, while
+      the <emphasis>Announced</emphasis>
+      and <emphasis>Served</emphasis> columns have special
+      bonuses. The order of the dice is irrelevant.
+
+      <orderedlist>
+	<listitem>
+	  <para>
+	    <emphasis>Ones - Sixes:</emphasis>
+	    The score for these cells is the sum of the corresponding
+	    dice in your hand. For example, if you write the hand [6,
+	    1, 6, 3, 6] in the <emphasis>Down Sixes</emphasis> cell,
+	    you will score 18 points (there are three dice of 6).
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Max - Min:</emphasis> The score for these cells
+	    is simply the sum of the hand. See below how these values
+	    are used to compute the value for <emphasis>T2</emphasis>,
+	    which is the actual score for the center section.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Straight:</emphasis> You get 15 points for the
+	    hand [1, 2, 3, 4, 5] and 20 points for the hand [2, 3, 4,
+	    5, 6].
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Full House:</emphasis> Three of the dice have
+	    equal values and the remaining two have equal values (all
+	    five dice can also be equal, as this is a special kind of
+	    full house). The value of the group of three dice dictates
+	    the value of the full house: 25 points for Ones, 30 points
+	    for Twos, up to 50 points for Sixes.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Four of a Kind:</emphasis> Four of the dice have
+	    equal values (the value of the fifth die is ignored). You
+	    score 75 points for Ones, 80 points for Twos, up to 100
+	    points for Sixes.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Yams:</emphasis> All the dice have equal
+	    values. You score 150 points for Ones, 160 points for Twos,
+	    up to 200 points for Sixes.
+	  </para>
+	</listitem>
+      </orderedlist>
+    </para>
+
+    <para>
+      The rules for computing the column totals are:
+
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    <emphasis>T1</emphasis> is the sum of the Ones through
+	    Sixes. If this sum is at least 60, you get a bonus of 30 points.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>T2</emphasis> is the difference between Max and
+	    Min mutiplied by the value for Ones. For example, if you
+	    scored 28 points in Max, 8 points in Min, and have 3 Ones,
+	    then T2 is (28 - 8) * 3 = 60.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>T3</emphasis> is the sum of the lower
+	    section. You get a bonus of 100 points if this sum is at
+	    least 300, or a bonus of 50 points if the sum is at least
+	    150.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Total</emphasis> is simply the sum T1 + T2 + T3.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    <emphasis>Grand Total</emphasis> is the running sum of all six
+	    columns. At the end of the game, this is your total score.
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+
+    <para>
+      There are special rules for the values and totals in
+      the <emphasis>Announced</emphasis>
+      and <emphasis>Served</emphasis> columns:
+
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    Bonuses for the <emphasis>Served</emphasis> column are
+	    doubled: the upper section bonus is 60, while the lower
+	    section bonus is 200 or 100.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Served Ones are doubled in value. For example, if you roll
+	    [1, 2, 1, 5, 1], you will score 6 points for Ones. This is
+	    done so that the T2 value is doubled as well.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Announced Ones through Sixes are doubled, but only if you
+	    roll more useful dice in your second or third roll. For
+	    example, if your initial hand is [2, 3, 4, 4, 6] and you
+	    announce Fours, but you do not roll any more Fours in your
+	    subsequent rolls, you still get only 8 points (4 * 2). If
+	    you do roll another Four, you double everything and get 24
+	    points (4 * 3 * 2).
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Announced straights, full houses, four-of-a-kind and
+	    yamses score double, but only if you roll more then
+	    once. If you announce them and immediately write them down
+	    after the first roll, they score their regular points.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    There are no bonuses for
+	    the <emphasis>Announced</emphasis> column, since each
+	    individual hand is potentially doubled.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    If you fill a cell in the <emphasis>Served</emphasis>
+	    column after you rolled more than once, you will score 0
+	    points. Likewise, if you fill a cell in
+	    the <emphasis>Announced</emphasis> column without having
+	    announced anything, you will score 0 points.
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+  </sect1>
+
+
+  <sect1 id="options">
+    <title>Game Options</title>
+
+    <para>
+      The only configurable options are the number of players and the
+      players' names. Note that, after saving the new values, the
+      current game will continue with the old players. The new players
+      will be used when you begin a new game.
+    </para>
+  </sect1>
+
+  <sect1 id="strategy">
+    <title>Game Strategy</title>
+
+    <para>
+      These tips are by no means comprehensive, but we have been
+      playing this game for over 20 years and we have developed
+      certain gut feelings. :)
+    </para>
+
+    <para>
+      Due to the large number of cells, the game is very flexible,
+      particularly in the midgame. Stop after each roll and reconsider
+      your options. Perhaps you initially wanted to roll Threes, but
+      if your first roll is [2, 6, 6, 5, 5], that's a decent sum of 24
+      for the Served Max. Or perhaps you can announce a Full House,
+      reroll the Two and hope for a Five or Six.
+    </para>
+
+    <para>
+      In the top section, if you score three of each figure (three
+      Ones, three Twos...), your total will be 63. Since 60 points are
+      sufficient to receive the 30-point bonus, you can "afford" to
+      lose three points. You can, for example, roll only two Threes,
+      or only two Ones and two Twos. Or if you are lucky and roll four
+      Twos, you now have five points to spare and can afford to only
+      roll two Fives.
+    </para>
+
+    <para>
+      A served yams is extremely rare. The odds of rolling one are 1
+      in 1296 hands, or one every 18 games. We think of the served yams
+      as a spare hand for a rainy day. Served four-of-a-kind are not
+      much more likely either, although if you're feeling lucky you
+      might want to hold on to that cell.
+    </para>
+
+    <para>
+      When the game begins, your options are very limited. It is
+      important to get started on the Down and Up columns. This will
+      make many cells available on the two Free columns. So look for
+      those Ones and Twos early in the game. Many times you will have
+      to cut the Up Yams, sometimes even the Up Four of a Kind, since
+      the chances are low that you will actually score a yams during
+      the opening hands and it is advisable to move on to easier
+      combinations.
+    </para>
+
+    <para>
+      Keep as many Max and Min cells available for as long as
+      possible. When you're shooting for that yams and it just won't
+      come, you can still use the hand for a decent score in the Max
+      or Min cells.
+    </para>
+
+    <para>
+      It is much easier to roll a Straight when your initial hand is
+      [2, 3, 4, 5, x], since now you have two rolls to try for either
+      a One or a Six. When you see this hand in practice, always
+      consider going for a Straight.
+    </para>
+  </sect1>
+
+
+  <!-- ============= Authors ================================ -->
+
+  <sect1 id="authors">
+    <title>Authors</title>
+
+    <para>
+      &app; was written by &authorname; &email; &lt;<ulink type="http"
+      url="http://catalin.francu.com">http://catalin.francu.com</ulink>&gt;
+    </para>
+  </sect1>
+
+  <!-- ============= Application License ============================= -->
+
+ <sect1 id="license">
+   <title>License</title>
+
+   <para>
+     This program is free software: you can redistribute it and/or
+     modify it under the terms of the <ulink type="http"
+     url="http://www.gnu.org/copyleft/gpl.html">GNU General Public
+     License</ulink> as published by the Free Software Foundation,
+     either version 3 of the License, or (at your option) any later
+     version.
+   </para>
+    
+   <para>
+     This program is distributed in the hope that it will be useful,
+     but WITHOUT ANY WARRANTY; without even the implied warranty of
+     MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+     GNU General Public License for more details.
+   </para>
+
+   <para>
+     You should have received a copy of the GNU General Public License
+     along with this program. If not, please visit
+     the <ulink type="http"
+     url="http://www.gnu.org/copyleft/gpl.html">GNU General Public
+     License</ulink> web page.
+   </para>
+ </sect1>
+</article>
