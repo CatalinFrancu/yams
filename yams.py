@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+
+import gnome
 import gtk
+import operator
 import os
 import os.path
 import pango
 import pygtk
 import random
+import time
 
 import yamsData
 
@@ -16,6 +20,12 @@ MENU = '''<ui>
     <menu action="Game">
       <menuitem action="New"/>
       <menuitem action="Quit"/>
+    </menu>
+    <menu action="Settings">
+      <menuitem action="Preferences"/>
+    </menu>
+    <menu action="Help">
+      <menuitem action="Contents"/>
     </menu>
   </menubar>
 </ui>'''
@@ -30,6 +40,7 @@ SERVED_COLUMN = 6
 MSG_ANNOUNCE = 'You announce %s.'
 MSG_FILLED_CELL = 'That cell is already filled.'
 MSG_FIRST_ROLL = 'Click Roll to roll all the dice.'
+MSG_GAME_OVER = 'Game over!'
 MSG_OBEY_ANNOUNCE = 'You announced %s and you must fill it.'
 MSG_SELECT_DICE = 'Select some dice to roll or click a cell to fill it.'
 MSG_RULE_DOWN = u'The \u21e9 Down \u21e9 column must be filled top-to-bottom.'
@@ -76,35 +87,173 @@ DIE_IMAGES = [ 'images/gnome-dice-none.svg',
                'images/gnome-dice-6.svg' ]
 
 DEFAULT_PLAYERS = [ 'Player 1' ]
+MAX_PLAYERS = 6
+MAX_TURNS = 6 * 12
+
+def loadConfigFile():
+    try:
+        f = open(os.path.expanduser(CONFIG_FILE), 'r')
+        for line in f:
+            line = line.strip()
+            parts = line.split('=', 2)
+            if parts[0].strip() == 'playerNames':
+                names = parts[1].split(',')
+                playerNames = [x.strip() for x in names]
+            #endif
+        #endfor
+        f.close()
+    except IOError:
+        playerNames = DEFAULT_PLAYERS
+    #endtry
+    return playerNames
+#enddef
+
+def saveConfigFile(playerNames):
+    try:
+        f = open(os.path.expanduser(CONFIG_FILE), 'w')
+        f.write('playerNames = %s\n' % (', '.join(playerNames)))
+        f.close()
+    except IOError:
+        pass
+    #endtry
+#enddef
+
+class PreferencesWindow(gtk.Dialog):
+    entries = None
+    okButton = None
+
+    def __init__(self, parent):
+        gtk.Dialog.__init__(self, 'Yams Preferences', parent,
+                            gtk.DIALOG_MODAL | gtk.DIALOG_NO_SEPARATOR,
+                            (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
+                             gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        playerNames = loadConfigFile()
+
+        hbox = gtk.HBox(False, 2)
+        self.vbox.pack_start(hbox, False, False, 10)
+        hbox.show()
+
+        label = gtk.Label('Number of players: ')
+        hbox.pack_start(label, False, False, 10)
+        label.show()
+
+        adjustment = gtk.Adjustment(len(playerNames), 1, MAX_PLAYERS, 1)
+        self.spinNumPlayers = gtk.SpinButton(adjustment)
+        hbox.pack_start(self.spinNumPlayers, False, False, 10)
+        self.spinNumPlayers.show()
+        self.spinNumPlayers.connect('value-changed', self.onNumPlayersChanged)
+        
+        label = gtk.Label('Player names:')
+        self.vbox.pack_start(label, False)
+        label.show()
+
+        table = gtk.Table(MAX_PLAYERS, 2)
+        self.vbox.pack_start(table, False, False, 10)
+        table.show()
+
+        self.entries = []
+        for i in range(MAX_PLAYERS):
+            label = gtk.Label('%d:' % (i + 1))
+            table.attach(label, 0, 1, i, i + 1)
+            label.show()
+
+            entry = gtk.Entry(40)
+            table.attach(entry, 1, 2, i, i + 1, gtk.EXPAND | gtk.FILL, 0, 10)
+            entry.show()
+            entry.connect('changed', self.onEntryChanged)
+
+            if i < len(playerNames):
+                entry.set_text(playerNames[i])
+            else:
+                entry.set_sensitive(False)
+            #endif
+            self.entries += [entry]
+        #endfor
+
+        for c in self.action_area.get_children():
+            if c.get_label() == 'gtk-ok':
+              self.okButton = c
+            #endif
+        #endfor
+    #enddef
+
+    def onNumPlayersChanged(self, spinButton):
+        for i in range(MAX_PLAYERS):
+            self.entries[i].set_sensitive(i < spinButton.get_value())
+        #endfor
+        self.onEntryChanged(None)
+    #enddef
+
+    def onEntryChanged(self, entry):
+        anyEmpty = 0
+        for e in self.entries:
+            if e.get_text().strip() == '' and e.state == gtk.STATE_NORMAL:
+                anyEmpty = True
+            #endif
+        #endfor
+
+        if self.okButton:
+            self.okButton.set_sensitive(not anyEmpty)
+        #endif
+    #enddef
+
+    def getPlayerNames(self):
+        return [e.get_text() for e in self.entries \
+                    if e.state == gtk.STATE_NORMAL]
+    #enddef
+#endclass
+
+
+class ScoreWindow(gtk.Dialog):
+
+    def __init__(self, parent):
+        gtk.Dialog.__init__(self, 'Final Scores', parent,
+                            gtk.DIALOG_MODAL | gtk.DIALOG_NO_SEPARATOR,
+                            (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
+        self.set_default_size(300, -1)
+        self.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
+
+        matrix = []
+        for i in range(yamsData.numPlayers):
+            name = yamsData.playerNames[i]
+            score = yamsData.scoreSheets[i].getTotal()
+            matrix += [(name, score)]
+        #endfor
+        matrix.sort(key=operator.itemgetter(1))
+        matrix.reverse()
+
+        table = gtk.Table(yamsData.numPlayers, 3, False)
+        self.vbox.pack_start(table, False, False, 10)
+
+        for i in range(yamsData.numPlayers):
+            label = gtk.Label('%d.' % (i + 1))
+            table.attach(label, 0, 1, i, i + 1, gtk.FILL, 0, 20)
+
+            label = gtk.Label(matrix[i][0])
+            label.set_alignment(0.0, 0.0)
+            table.attach(label, 1, 2, i, i + 1, gtk.EXPAND | gtk.FILL, 0, 0)
+
+            label = gtk.Label(matrix[i][1])
+            label.set_alignment(1.0, 0.0)
+            table.attach(label, 2, 3, i, i + 1, gtk.FILL, 0, 20)
+        #endfor
+
+        self.show_all()
+    #enddef
+#endclass
+
 
 class MainWindow:
+    accelGroup = None
     diceButtons = None
     notebook = None
     rollButton = None
     statusBar = None
     window = None
 
-    def loadConfigFile(self):
-        try:
-            f = open(os.path.expanduser(CONFIG_FILE), 'r')
-            for line in f:
-                line = line.strip()
-                parts = line.split('=', 2)
-                if parts[0].strip() == 'playerNames':
-                    names = parts[1].split(',')
-                    yamsData.playerNames = [x.strip() for x in names]
-                    yamsData.numPlayers = len(yamsData.playerNames)
-                #endif
-            #endfor
-            f.close()
-        except IOError:
-            yamsData.numPlayers = len(DEFAULT_PLAYERS)
-            yamsData.playerNames = DEFAULT_PLAYERS
-        #endtry
-    #enddef
-
     def doGameNew(self, action):
-        self.loadConfigFile()
+        yamsData.playerNames = loadConfigFile()
+        yamsData.numPlayers = len(yamsData.playerNames)
         yamsData.scoreSheets = []
         for i in range(yamsData.numPlayers):
             yamsData.scoreSheets.append(yamsData.ScoreSheet())
@@ -121,7 +270,25 @@ class MainWindow:
         #endfor
 
         yamsData.currentPlayer = -1
+        yamsData.turn = 0
+        yamsData.gameOver = False
         self.advancePlayer()
+    #enddef
+
+    def doSettingsPreferences(self, action):
+        pw = PreferencesWindow(self.window)
+        response = pw.run()
+
+        if response == gtk.RESPONSE_ACCEPT:
+            saveConfigFile(pw.getPlayerNames())
+        #endif
+
+        pw.destroy()
+    #enddef
+
+    def doHelpContents(self, action):
+        print "yelp!"
+        gnome.help_display('foo', None)
     #enddef
 
     def onRollButtonClick(self, button):
@@ -147,8 +314,10 @@ class MainWindow:
         self.setRollButtonCount(yamsData.rolled + 1)
     #enddef
 
-    def onDieClick(self, button):
-        if yamsData.rolled == 0:
+    def onDieToggle(self, button):
+        if yamsData.gameOver:
+            button.set_active(False)
+        elif yamsData.rolled == 0:
             self.setStatusBarMessage(MSG_FIRST_ROLL)
             button.set_active(False)
         elif yamsData.rolled == 3:
@@ -168,6 +337,10 @@ class MainWindow:
 
         if cursor[1] == None:
             # First time we are displaying this tree. There was no click.
+            return
+        #endif
+
+        if yamsData.gameOver:
             return
         #endif
 
@@ -209,7 +382,9 @@ class MainWindow:
         if yamsData.rolled == 1 and column == ANNOUNCED_COLUMN \
                 and yamsData.announced == None:
             # Announce something
-            self.setStatusBarMessage(MSG_ANNOUNCE % ROW_PROPS[row][0], False)
+            message = MSG_ANNOUNCE % ROW_PROPS[row][0]
+            self.setStatusBarMessage(message, False)
+            self.alert(message)
             yamsData.announced = row
             #endif
             return
@@ -234,16 +409,37 @@ class MainWindow:
         self.advancePlayer()
     #enddef
 
+    def onNotebookSwitchPage(self, notebook, page, page_num):
+        score = yamsData.scoreSheets[page_num].getTotal()
+        self.grandTotalLabel.set_text(str(score))
+    #enddef
+
+    def onKeyPress(self, widget, event):
+        key = event.keyval - ord('1')
+        if key in range(5):
+            die = self.diceButtons[key]
+            die.set_active(not die.get_active())
+            return True
+        #endif
+        return False
+    #enddef
+
     def makeMenu(self):
         uiManager = gtk.UIManager()
-        accelGroup = uiManager.get_accel_group()
-        self.window.add_accel_group(accelGroup)
+        self.accelGroup = uiManager.get_accel_group()
+        self.window.add_accel_group(self.accelGroup)
         actionGroup = gtk.ActionGroup('UIManager')
         actionGroup.add_actions(
             [('Game', None, '_Game'),
              ('New', gtk.STOCK_NEW, '_New Game', None, None, self.doGameNew),
              ('Quit', gtk.STOCK_QUIT, None, None, None,
               lambda w: gtk.main_quit()),
+             ('Settings', None, '_Settings'),
+             ('Preferences', gtk.STOCK_PREFERENCES, '_Preferences', '<Ctrl>P',
+              None, self.doSettingsPreferences),
+             ('Help', None, '_Help'),
+             ('Contents', gtk.STOCK_HELP, '_Contents', 'F1', None,
+              self.doHelpContents),
              ])
         uiManager.insert_action_group(actionGroup, 0)
         uiManager.add_ui_from_string(MENU)
@@ -305,13 +501,15 @@ class MainWindow:
             button = gtk.ToggleToolButton()
             button.set_icon_widget(img)
             button.position = i
-            button.connect('clicked', self.onDieClick)
+            button.connect('toggled', self.onDieToggle)
             self.diceButtons += [button]
             toolbar.insert(button, i)
             self.setDiceImage(i, 0)
         #endfor
 
         self.rollButton = gtk.Button('')
+        self.rollButton.add_accelerator('clicked', self.accelGroup, ord('R'),
+                                        0, gtk.ACCEL_VISIBLE)
         self.setRollButtonCount(1)
         self.rollButton.connect('clicked', self.onRollButtonClick)
         box.pack_end(self.rollButton, False)
@@ -330,10 +528,10 @@ class MainWindow:
 
     def setRollButtonCount(self, count):
         if count > 3:
-            self.rollButton.set_label('Roll 3/3')
+            self.rollButton.set_label('_Roll 3/3')
             self.rollButton.set_sensitive(False)
         else:
-            self.rollButton.set_label('Roll %d/3' % count)
+            self.rollButton.set_label('_Roll %d/3' % count)
             self.rollButton.set_sensitive(True)
         #endif
     #enddef
@@ -361,17 +559,51 @@ class MainWindow:
         yamsData.currentPlayer += 1
         if yamsData.currentPlayer == yamsData.numPlayers:
             yamsData.currentPlayer = 0
+            yamsData.turn += 1
         #endif
         self.notebook.set_current_page(yamsData.currentPlayer)
 
-        name = yamsData.playerNames[yamsData.currentPlayer]
-        self.setStatusBarMessage(MSG_TURN % name, False)
+        if yamsData.numPlayers == 1:
+            # This doesn't happen automatically because the notebook page never
+            # changes in single player mode.
+            self.onNotebookSwitchPage(self.notebook, None, 0)
+        #endif
+
+        if yamsData.turn == MAX_TURNS:
+            self.gameOver()
+        else:
+            name = yamsData.playerNames[yamsData.currentPlayer]
+            self.setStatusBarMessage(MSG_TURN % name, False)
+        #endif
+    #enddef
+
+    def gameOver(self):
+        self.setStatusBarMessage(MSG_GAME_OVER)
+        self.rollButton.set_sensitive(False)
+        yamsData.gameOver = True
+
+        # Show the final scores
+        sw = ScoreWindow(self.window)
+        sw.run()
+        sw.destroy()
+    #enddef
+
+    def alert(self, message):
+        dialog = gtk.Dialog("Message", self.window,
+                            gtk.DIALOG_NO_SEPARATOR | gtk.DIALOG_MODAL,
+                            (gtk.STOCK_OK, gtk.RESPONSE_OK))
+        label = gtk.Label(message)
+        dialog.vbox.pack_start(label, True, True, 0)
+        label.show()
+        dialog.run()
+        dialog.destroy()
     #enddef
 
     def __init__(self):
         self.window = gtk.Window(gtk.WINDOW_TOPLEVEL)
         self.window.set_title('Yams')
         self.window.connect('destroy', lambda w: gtk.main_quit())
+        self.window.connect('key_press_event', self.onKeyPress)
 
         vbox = gtk.VBox(False, 2)
         self.window.add(vbox)
@@ -384,15 +616,33 @@ class MainWindow:
         vbox.pack_start(hbox, False)
         hbox.show()
 
-        hbox.pack_start(self.makeDiceBox(), False);
-
-        self.notebook = gtk.Notebook()
-        hbox.pack_start(self.notebook, False);
-        self.notebook.show()
-
         self.statusBar = gtk.Statusbar()
         vbox.pack_start(self.statusBar, False)
         self.statusBar.show()
+
+        hbox.pack_start(self.makeDiceBox(), False)
+
+        vbox = gtk.VBox(False, 2)
+        hbox.pack_start(vbox, False)
+        vbox.show()
+
+        self.notebook = gtk.Notebook()
+        vbox.pack_start(self.notebook, False)
+        self.notebook.show()
+        self.notebook.connect('switch-page', self.onNotebookSwitchPage)
+
+        hbox = gtk.HBox(False)
+        vbox.pack_start(hbox, False)
+        hbox.show()
+
+        frame = gtk.Frame('Grand Total')
+        hbox.pack_start(frame, True, False)
+        frame.show()
+
+        self.grandTotalLabel = gtk.Label("0")
+        self.grandTotalLabel.set_width_chars(10)
+        frame.add(self.grandTotalLabel)
+        self.grandTotalLabel.modify_font(pango.FontDescription('times bold 20'))
 
         self.window.show_all()
     #enddef

@@ -6,10 +6,12 @@ announced = None
 currentPlayer = 0
 dice = [0, 0, 0, 0, 0]
 firstRollDice = None
+gameOver = False
 numPlayers = None
 playerNames = None
 rolled = 0
 scoreSheets = None
+turn = 0
 
 COLUMN_NORMAL = 0
 COLUMN_ANNOUNCED = 1
@@ -105,7 +107,8 @@ class Column:
         # TODO: HANDLE THE ANNOUNCED COLUMN!
         self.filled[pos] = True;
 
-        if self.type == COLUMN_SERVED and rolled > 1:
+        if (self.type == COLUMN_SERVED and rolled > 1) or \
+           (self.type == COLUMN_ANNOUNCED and rolled > 1 and announced == None):
             # Equivalent to a cut.
             self.cells[pos] = 0
             return
@@ -152,6 +155,17 @@ class ScoreSheet:
         #endfor
         self.columns.append(Column(COLUMN_ANNOUNCED))
         self.columns.append(Column(COLUMN_SERVED))
+    #enddef
+
+    def getTotal(self):
+        total = 0
+        for c in self.columns:
+            colTotal = c.getTotal()
+            if colTotal != None:
+                total += colTotal
+            #endif
+        #endfor
+        return total
     #enddef
 #endclass
 
