@@ -113,9 +113,19 @@ class Column:
         t3 = self.getT3()
         if t1 == None and t2 == None and t3 == None:
             return None
-        else:
-            return (t1 if t1 else 0) + (t2 if t2 else 0) + (t3 if t3 else 0)
         #endif
+
+        if t1 == None:
+            t1 = 0
+        #endif
+        if t2 == None:
+            t2 = 0
+        #endif
+        if t3 == None:
+            t3 = 0
+        #endif
+
+        return t1 + t2 + t3
     #enddef
 
     def setCombo(self, pos, dice):
@@ -138,7 +148,12 @@ class Column:
                 # Double points for served aces
                 self.cells[pos] = 2 * digitSum
             elif self.type == COLUMN_ANNOUNCED:
-                self.cells[pos] = digitSum * (2 if count > origCount else 1)
+                if count > origCount:
+                    multiplier = 2
+                else:
+                    multiplier = 1
+                #endif
+                self.cells[pos] = digitSum * multiplier
             else:
                 self.cells[pos] = digitSum
         elif pos <= 7:
