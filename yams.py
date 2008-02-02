@@ -445,7 +445,11 @@ class MainWindow:
 
         value = yamsData.writeScore(ssRow, ssColumn)
         model = treeView.get_model()
-        model.set(model.get_iter(row), column, value if value else u'\u2015')
+        if value > 0:
+            model.set(model.get_iter(row), column, value)
+        else:
+            model.set(model.get_iter(row), column, u'\u2015')
+        #endif
 
         ssCol = yamsData.scoreSheets[yamsData.currentPlayer].columns[ssColumn]
         model.set(model.get_iter(ROW_T1), column, ssCol.getT1())
