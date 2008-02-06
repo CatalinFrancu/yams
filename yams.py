@@ -593,7 +593,11 @@ class MainWindow:
         self.statusBar.pop(contextId)
         self.statusBar.push(contextId, msg)
         if bell:
-            self.statusBar.error_bell()
+            try:
+                self.statusBar.error_bell()
+            except AttributeError:
+                pass
+            #endtry
         #endif
     #enddef
 
