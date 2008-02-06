@@ -21,6 +21,7 @@ announced = None
 currentPlayer = 0
 dice = [0, 0, 0, 0, 0]
 firstRollDice = None
+highScoreTable = None
 gameOver = False
 numPlayers = None
 playerNames = None
