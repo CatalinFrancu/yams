@@ -37,6 +37,7 @@ MENU = '''<ui>
   <menubar name="MenuBar">
     <menu action="Game">
       <menuitem action="New"/>
+      <menuitem action="HighScores"/>
       <menuitem action="Quit"/>
     </menu>
     <menu action="Settings">
@@ -107,6 +108,7 @@ DIE_IMAGES = [ 'images/gnome-dice-none.svg',
 
 DEFAULT_PLAYERS = [ 'Player 1' ]
 MAX_PLAYERS = 6
+MAX_HIGH_SCORES = 10
 MAX_TURNS = 6 * 12
 
 def loadConfigFile():
@@ -115,22 +117,47 @@ def loadConfigFile():
         for line in f:
             line = line.strip()
             parts = line.split('=', 2)
-            if parts[0].strip() == 'playerNames':
+            parts[0] = parts[0].strip()
+            if parts[0] == 'playerNames':
                 names = parts[1].split(',')
                 playerNames = [x.strip() for x in names]
+            elif parts[0] == 'highNames':
+                names = parts[1].strip().split(',')
+                if names == ['']:
+                    highNames = []
+                else:
+                    highNames = [x.strip() for x in names]
+                #endif
+            elif parts[0] == 'highScores':
+                scores = parts[1].strip().split(',')
+                if scores == ['']:
+                    highScores = []
+                else:
+                    highScores = [int(x.strip()) for x in scores]
+                #endif
             #endif
         #endfor
         f.close()
+
+        highScoreTable = []
+        for i in range(len(highNames)):
+            highScoreTable.append((highNames[i], highScores[i]))
+        #endfor
     except IOError:
         playerNames = DEFAULT_PLAYERS
+        highScoreTable = []
     #endtry
-    return playerNames
+    return (playerNames, highScoreTable)
 #enddef
 
-def saveConfigFile(playerNames):
+def saveConfigFile(playerNames, highScoreTable):
     try:
         f = open(os.path.expanduser(CONFIG_FILE), 'w')
         f.write('playerNames = %s\n' % (', '.join(playerNames)))
+        names = [x[0] for x in highScoreTable]
+        scores = [str(x[1]) for x in highScoreTable]
+        f.write('highNames = %s\n' % (', '.join(names)))
+        f.write('highScores = %s\n' % (', '.join(scores)))
         f.close()
     except IOError:
         pass
@@ -146,7 +173,7 @@ class PreferencesWindow(gtk.Dialog):
                             gtk.DIALOG_MODAL | gtk.DIALOG_NO_SEPARATOR,
                             (gtk.STOCK_CANCEL, gtk.RESPONSE_REJECT,
                              gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
-        playerNames = loadConfigFile()
+        (playerNames, highScoreTable) = loadConfigFile()
 
         hbox = gtk.HBox(False, 2)
         self.vbox.pack_start(hbox, False, False, 10)
@@ -225,38 +252,42 @@ class PreferencesWindow(gtk.Dialog):
 
 class ScoreWindow(gtk.Dialog):
 
-    def __init__(self, parent):
-        gtk.Dialog.__init__(self, 'Final Scores', parent,
+    def __init__(self, parent, windowTitle, data):
+        gtk.Dialog.__init__(self, windowTitle, parent,
                             gtk.DIALOG_MODAL | gtk.DIALOG_NO_SEPARATOR,
                             (gtk.STOCK_OK, gtk.RESPONSE_ACCEPT))
         self.set_default_size(300, -1)
         self.set_position(gtk.WIN_POS_CENTER_ON_PARENT)
 
-        matrix = []
-        for i in range(yamsData.numPlayers):
-            name = yamsData.playerNames[i]
-            score = yamsData.scoreSheets[i].getTotal()
-            matrix += [(name, score)]
-        #endfor
-        matrix.sort(key=operator.itemgetter(1))
-        matrix.reverse()
+        listStore = gtk.ListStore(str, int)
 
-        table = gtk.Table(yamsData.numPlayers, 3, False)
-        self.vbox.pack_start(table, False, False, 10)
-
-        for i in range(yamsData.numPlayers):
-            label = gtk.Label('%d.' % (i + 1))
-            table.attach(label, 0, 1, i, i + 1, gtk.FILL, 0, 20)
-
-            label = gtk.Label(matrix[i][0])
-            label.set_alignment(0.0, 0.0)
-            table.attach(label, 1, 2, i, i + 1, gtk.EXPAND | gtk.FILL, 0, 0)
-
-            label = gtk.Label(matrix[i][1])
-            label.set_alignment(1.0, 0.0)
-            table.attach(label, 2, 3, i, i + 1, gtk.FILL, 0, 20)
+        for (name, score) in data:
+            listStore.append([name, score])
         #endfor
 
+        treeView = gtk.TreeView(listStore)
+
+        col = gtk.TreeViewColumn('Name')
+        cell = gtk.CellRendererText()
+        col.pack_end(cell)
+        col.add_attribute(cell, 'text', 0)
+        col.set_sizing(gtk.TREE_VIEW_COLUMN_FIXED)
+        col.set_expand(True)
+        treeView.append_column(col)
+
+        col = gtk.TreeViewColumn('Score')
+        cell = gtk.CellRendererText()
+        cell.set_property('xalign', 1.0)
+        col.pack_end(cell)
+        col.add_attribute(cell, 'text', 1)
+        col.set_sizing(gtk.TREE_VIEW_COLUMN_AUTOSIZE)
+        col.set_expand(False)
+        col.set_alignment(1.0)
+        treeView.append_column(col)
+
+        treeView.get_selection().set_mode(gtk.SELECTION_NONE)
+
+        self.vbox.pack_start(treeView, False, False, 10)
         self.show_all()
     #enddef
 #endclass
@@ -271,7 +302,7 @@ class MainWindow:
     window = None
 
     def doGameNew(self, action):
-        yamsData.playerNames = loadConfigFile()
+        (yamsData.playerNames, yamsData.highScoreTable) = loadConfigFile()
         yamsData.numPlayers = len(yamsData.playerNames)
         yamsData.scoreSheets = []
         for i in range(yamsData.numPlayers):
@@ -294,12 +325,20 @@ class MainWindow:
         self.advancePlayer()
     #enddef
 
+    def doGameHighScores(self, action):
+        # Show the final scores
+        sw = ScoreWindow(self.window, 'Yams High Scores',
+                         yamsData.highScoreTable)
+        sw.run()
+        sw.destroy()
+    #enddef
+
     def doSettingsPreferences(self, action):
         pw = PreferencesWindow(self.window)
         response = pw.run()
 
         if response == gtk.RESPONSE_ACCEPT:
-            saveConfigFile(pw.getPlayerNames())
+            saveConfigFile(pw.getPlayerNames(), yamsData.highScoreTable)
         #endif
 
         pw.destroy()
@@ -482,6 +521,8 @@ class MainWindow:
         actionGroup.add_actions(
             [('Game', None, '_Game'),
              ('New', gtk.STOCK_NEW, '_New Game', None, None, self.doGameNew),
+             ('HighScores', '', '_High Scores', None, None,
+              self.doGameHighScores),
              ('Quit', gtk.STOCK_QUIT, None, None, None,
               lambda w: gtk.main_quit()),
              ('Settings', None, '_Settings'),
@@ -498,21 +539,18 @@ class MainWindow:
     #enddef
 
     def makeTreeView(self):
-        liststore = gtk.ListStore(str, str, str, str, str, str, str)
+        listStore = gtk.ListStore(str, str, str, str, str, str, str)
 
         for (rowName, ignored) in ROW_PROPS:
-            liststore.append([rowName] + [''] * 6)
+            listStore.append([rowName] + [''] * 6)
         #endfor
 
-        # create the TreeView using liststore
-        treeView = gtk.TreeView(liststore)
+        treeView = gtk.TreeView(listStore)
 
-        # create a CellRendererText to render the data
         cellHeaderCol = gtk.CellRendererText()
         cellNormalCol = gtk.CellRendererText()
         cellHeaderCol.set_property('weight', 550)
 
-        # create the TreeViewColumns to display the data
         for i in range(7):
             tvColumn = gtk.TreeViewColumn(COLUMN_NAMES[i])
             treeView.append_column(tvColumn)
@@ -637,14 +675,67 @@ class MainWindow:
         self.rollButton.set_sensitive(False)
         yamsData.gameOver = True
 
+        # Update the high score table as needed
+        highScoresChanged = self.mergeHighScores()
+
+        matrix = []
+        for i in range(yamsData.numPlayers):
+            name = yamsData.playerNames[i]
+            score = yamsData.scoreSheets[i].getTotal()
+            matrix += [(name, score)]
+        #endfor
+        matrix.sort(key=operator.itemgetter(1))
+        matrix.reverse()
+
         # Show the final scores
-        sw = ScoreWindow(self.window)
+        sw = ScoreWindow(self.window, 'Final Scores', matrix)
         sw.run()
         sw.destroy()
+
+        if highScoresChanged:
+            self.doGameHighScores(None)
+        #endif
+    #enddef
+
+    # Returns true if the high score table has changed after this game.
+    def mergeHighScores(self):
+        # Sort the current scores
+        matrix = []
+        for i in range(yamsData.numPlayers):
+            name = yamsData.playerNames[i]
+            score = yamsData.scoreSheets[i].getTotal()
+            matrix += [(name, score)]
+        #endfor
+        matrix.sort(key=operator.itemgetter(1))
+        matrix.reverse()
+
+        # Load the existing high scores
+        (playerNames, highScores) = loadConfigFile()
+
+        # Merge the two and keep at most MAX_HIGH_SCORES entries
+        totalLen = min(len(matrix) + len(highScores), MAX_HIGH_SCORES)
+        newHighScores = []
+        matrix.append(('', -1))
+        highScores.append(('', -1))
+        i = 0
+        j = 0
+        for k in range(totalLen):
+            if matrix[i][1] > highScores[j][1]:
+                newHighScores.append(matrix[i])
+                i += 1
+            else:
+                newHighScores.append(highScores[j])
+                j += 1
+            #endif
+        #endfor
+
+        saveConfigFile(playerNames, newHighScores)
+        yamsData.highScoreTable = newHighScores
+        return (i > 0)
     #enddef
 
     def alert(self, message):
-        dialog = gtk.Dialog("Message", self.window,
+        dialog = gtk.Dialog('Message', self.window,
                             gtk.DIALOG_NO_SEPARATOR | gtk.DIALOG_MODAL,
                             (gtk.STOCK_OK, gtk.RESPONSE_OK))
         label = gtk.Label(message)
@@ -694,7 +785,7 @@ class MainWindow:
         hbox.pack_start(frame, True, False)
         frame.show()
 
-        self.grandTotalLabel = gtk.Label("0")
+        self.grandTotalLabel = gtk.Label('0')
         self.grandTotalLabel.set_width_chars(10)
         frame.add(self.grandTotalLabel)
         self.grandTotalLabel.modify_font(pango.FontDescription('times bold 20'))
@@ -703,7 +794,7 @@ class MainWindow:
     #enddef
 #endclass
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     appProperties = {'app-datadir': os.getcwd()}
     gnome.init('yams', '1.0', properties = appProperties)
 
