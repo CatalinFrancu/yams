@@ -114,6 +114,10 @@ MAX_TURNS = 6 * 12
 def loadConfigFile():
     try:
         f = open(os.path.expanduser(CONFIG_FILE), 'r')
+
+        highNames = []
+        highScores = []
+
         for line in f:
             line = line.strip()
             parts = line.split('=', 2)
@@ -168,6 +172,15 @@ class PreferencesWindow(gtk.Dialog):
     entries = None
     okButton = None
 
+    def onKeyPress(self, widget, event):
+        if event.keyval == ord(','):
+            # Do not allow commas in player names because we use
+            # comma-separated strings to store those names in the config file.
+            return True
+        #endif
+        return False
+    #enddef
+
     def __init__(self, parent):
         gtk.Dialog.__init__(self, 'Yams Preferences', parent,
                             gtk.DIALOG_MODAL | gtk.DIALOG_NO_SEPARATOR,
@@ -221,6 +234,8 @@ class PreferencesWindow(gtk.Dialog):
               self.okButton = c
             #endif
         #endfor
+
+        self.connect('key_press_event', self.onKeyPress)
     #enddef
 
     def onNumPlayersChanged(self, spinButton):
